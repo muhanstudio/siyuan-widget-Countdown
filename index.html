@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Countdown</title>
+    <link rel="stylesheet" href="resources/css/index.css" />
+  </head>
+
+  <body>
+    <div class="info">
+      <div class="logo">
+        <p>计时器</p>
+      </div>
+      <img src="resources/images/background.jpg" alt="background.jpg" />
+      <div class="left-box"></div>
+      <div class="right-box"></div>
+      <div class="time">
+        <h2 class="title">L O V E &nbsp L I F E</h2>
+        <div class="time-box">
+          <div class="days">
+            <p class="day">00</p>
+            <span class="text">天</span>
+          </div>
+          <div class="hours">
+            <p class="hour">00</p>
+            <span class="text">小时</span>
+          </div>
+          <div class="min">
+            <p class="min">00</p>
+            <span class="text">分钟</span>
+          </div>
+          <div class="sec">
+            <p class="sec">00</p>
+            <span class="text">秒</span>
+          </div>
+        </div>
+        <p class="sub-title">截止时间</p>
+        <p class="sub-title tips"></p>
+      </div>
+    </div>
+  </body>
+
+  <script src="resources/js/jquery-3.2.1.min.js"></script>
+  <script>
+    $(function () {
+      var order_time = null;
+
+      // 时间计算
+      function endTime(endDate) {
+        var leftTime = new Date(endDate) - new Date(); //计算剩余的毫秒数
+        const titleElement = document.querySelector(".title");
+        if (leftTime > 0) {
+          titleElement.innerHTML = "距离截至时间还剩";
+        } else {
+          titleElement.innerHTML = "截至时间已过";
+        }
+        var days = parseInt(leftTime / 1000 / 60 / 60 / 24, 10); //计算剩余的天数
+        var hours = parseInt((leftTime / 1000 / 60 / 60) % 24, 10); //计算剩余的小时
+        var minutes = parseInt((leftTime / 1000 / 60) % 60, 10); //计算剩余的分钟
+        var seconds = parseInt((leftTime / 1000) % 60, 10); //计算剩余的秒数
+        days = checkTime(days);
+        hours = checkTime(hours);
+        minutes = checkTime(minutes);
+        seconds = checkTime(seconds);
+        if (days >= 0 || hours >= 0 || minutes >= 0 || seconds >= 0) {
+          $("p.day").text(days);
+          $("p.hour").text(hours);
+          $("p.min").text(minutes);
+          $("p.sec").text(seconds);
+        }
+      }
+
+      function checkTime(i) {
+        //将0-9的数字前面加上0，例1变为01
+        if (i < 10) {
+          i = "0" + i;
+        }
+        return i;
+      }
+
+      // 刷新时间
+      function runTime(time) {
+        var futureDate = new Date(time);
+        order_time = setInterval(function () {
+          endTime(futureDate);
+        }, 1000);
+      }
+
+      // 获取文件内容
+      function getFileContent(path) {
+        return fetch("/api/file/getFile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            path: path,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.text();
+            } else {
+              throw new Error("Failed to get file content");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      // 写入文件内容
+      function putFileContent(path, content) {
+        return getFileContent(path)
+          .then((existingContent) => {
+            const newContent = existingContent + content; // 将新内容追加到旧内容后面
+
+            const formData = new FormData();
+            formData.append("path", path);
+            formData.append("file", new Blob([newContent]));
+
+            return fetch("/api/file/putFile", {
+              method: "POST",
+              body: formData,
+            });
+          })
+          .then((response) => {
+            if (response.ok) {
+              console.log("File saved successfully");
+            } else {
+              throw new Error("Failed to save file");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      // 获取或设置id和截止时间的对应关系
+      function getIdTimeMap() {
+        // 从文件获取 idTimeMap
+        return getFileContent("/data/widgets/Countdown/data/data.json");
+      }
+
+      function saveIdTimeMap(id, time) {
+        var idTimeMap = getIdTimeMap();
+        idTimeMap[id] = time;
+        // 将 idTimeMap 写入文件
+        putFileContent(
+          "/data/widgets/Countdown/data/data.json",
+          JSON.stringify(idTimeMap)
+        );
+      }
+
+      // 获取当前页面的id
+      const id =
+        window.frameElement.parentElement.parentElement.getAttribute(
+          "data-node-id"
+        );
+
+      // 判断id是否存在对应的时间，如果存在则直接显示界面，否则显示输入框
+      getIdTimeMap()
+        .then(function (idTimeMap) {
+          var idTimeMapJ = {};
+
+          // 使用正则表达式提取键值对中的键和值
+          var regex = /"([^"]+)":"([^"]+)"/g;
+          var match;
+          while ((match = regex.exec(idTimeMap)) !== null) {
+            var key = match[1];
+            var value = match[2];
+            idTimeMapJ[key] = value;
+          }
+
+          var time = idTimeMapJ[id];
+
+          if (time) {
+            runTime(time);
+            $(".tips").text(time);
+          } else {
+            showInputBox();
+          }
+        })
+        .catch(function (error) {
+          console.log("获取 idTimeMap 出错:", error);
+        });
+
+      // 创建输入框并添加到页面中
+      function showInputBox() {
+        var inputElement = document.createElement("input");
+        inputElement.type = "datetime-local";
+        inputElement.style.position = "fixed";
+        inputElement.style.top = "0";
+        inputElement.style.left = "0";
+        inputElement.style.width = "200px";
+        inputElement.style.height = "50px";
+        inputElement.style.zIndex = "9999";
+        inputElement.style.borderRadius = "10px"; // 圆角化的样式
+        document.body.appendChild(inputElement);
+
+        // 监听输入框的确认事件
+        inputElement.addEventListener("change", function (event) {
+          var timeValue = inputElement.value;
+          saveIdTimeMap(id, timeValue);
+          inputElement.style.display = "none"; // 隐藏输入框元素或使用 remove 方法移除
+          runTime(timeValue);
+          $(".tips").text(timeValue);
+        });
+      }
+    });
+  </script>
+</html>

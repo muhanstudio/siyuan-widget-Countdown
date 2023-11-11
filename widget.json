@@ -1,0 +1,30 @@
+{
+  "name": "Countdown",
+  "author": "muhanstudio",
+  "url": "https://github.com/muhanstudio/siyuan-widget-Countdown",
+  "version": "0.0.2",
+  "minAppVersion": "1.1.1",
+  "displayName": {
+    "default": "Countdown",
+    "zh_CN": "倒计时"
+  },
+  "description": {
+    "default": "A simple and beautiful countdown",
+    "zh_CN": "一个简约漂亮的倒计时"
+  },
+  "readme": {
+    "default": "README.md",
+    "zh_CN": "README_zh_CN.md"
+  },
+  "funding": {
+    "openCollective": "",
+    "patreon": "",
+    "github": "",
+    "custom": [
+      ""
+    ]
+  },
+  "keywords": [
+    "倒计时", "Countdown"
+  ]
+}
