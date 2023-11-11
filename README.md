@@ -1,1 +1,1 @@
-> A simple and beautiful countdown
+> A simple and beautiful countdown, with memory function, can remember each due time, you can hang multiple countdown plug-ins without interfering with each other, and maintain the deadline

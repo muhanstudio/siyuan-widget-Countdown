@@ -9,8 +9,8 @@
     "zh_CN": "倒计时"
   },
   "description": {
-    "default": "A simple and beautiful countdown",
-    "zh_CN": "一个简约漂亮的倒计时"
+    "default": "A simple and beautiful countdown,have a memory function and can remember each end time",
+    "zh_CN": "一个简约漂亮的倒计时，拥有记忆功能，可以记住每一个截至时间"
   },
   "readme": {
     "default": "README.md",
